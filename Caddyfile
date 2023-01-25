@@ -1,8 +1,25 @@
-http://localhost:80 {
+{
+    # We disable HTTPS here, as that's handled by our hosting provider. We just
+    # listen on port 80 and get unwrapped requests.
+    auto_https off
+}
+
+# We use the domain name (via Host header) to decide which upstream service we
+# should forward the traffic to:
+events.httptoolkit.tech:80 {
     reverse_proxy https://eu.posthog.com {
+        # We need to use the correct hostname for upstream requests:
         header_up Host {upstream_hostport}
 
         # Anonymize ip addresses when forwarding:
         header_up X-Forwarded-For "\.(\d{0,3})$" ".0"
+    }
+}
+
+# For any other unrecognized services, we reject the request outright:
+:80 {
+    respond 400 {
+        body "Unrecognized host name"
+        close
     }
 }
