@@ -1,0 +1,15 @@
+name: CI
+on: [pull_request]
+jobs:
+  test-build:
+    name: Test Docker build
+    runs-on: ubuntu-latest
+    container: httptoolkit/act-build-base
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Build Docker container
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: false
