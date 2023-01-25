@@ -1,0 +1,8 @@
+http://localhost:80 {
+    reverse_proxy https://eu.posthog.com {
+        header_up Host {upstream_hostport}
+
+        # Anonymize ip addresses when forwarding:
+        header_up X-Forwarded-For "\.(\d{0,3})$" ".0"
+    }
+}
