@@ -1,3 +1,12 @@
+{
+	servers {
+        # We trust (configurably) X-Forwarded-For headers from traffic that's proxied through
+        # localhost, e.g. through SCW's Envoy container proxy. Without this all traffic appears
+        # to come directly from localhost, ignoring the data Envoy passes through.
+		trusted_proxies static {$TRUSTED_PROXIES:127.0.0.1}
+	}
+}
+
 # We use the domain name (via Host header) to decide which upstream service we
 # should forward the traffic to:
 {$EVENTS_DOMAIN:events.httptoolkit.tech} {
