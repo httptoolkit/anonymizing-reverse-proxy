@@ -7,9 +7,10 @@
 	}
 }
 
+
 # We use the domain name (via Host header) to decide which upstream service we
 # should forward the traffic to:
-{$EVENTS_DOMAIN:events.httptoolkit.tech} {
+{$EVENTS_DOMAIN:events.httptoolkit.tech}:{$PORT:8080} {
     reverse_proxy https://eu.posthog.com {
         # We need to use the correct hostname for upstream requests:
         header_up Host {upstream_hostport}
@@ -20,7 +21,8 @@
 }
 
 # For any other unrecognized services, we reject the request outright:
-:80, :443 {
+:80, :443, :{$PORT:8080} {
+    log
     respond 400 {
         body "Unrecognized host name"
         close
