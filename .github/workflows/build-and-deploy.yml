@@ -2,12 +2,12 @@ name: CI
 on: [push]
 jobs:
   publish-hidora:
-    name: Deploy to Docker Hub & Hidora
+    name: Deploy to Docker Hub & Scaleway
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     container: httptoolkit/act-build-base
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
@@ -18,7 +18,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           images: httptoolkit/anonymizing-reverse-proxy
@@ -27,22 +27,17 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha
 
-      - name: Build & deploy to Docker Hub
-        uses: docker/build-push-action@v2
+      - name: Publish to Docker Hub
+        uses: docker/build-push-action@v4
         with:
           context: .
-          push: true
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
-      - name: Redeploy site
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          sleep 30 # Wait for Docker Hub to fully publish
-
-          # Trigger a container redeploy:
-          curl "https://app.hidora.com/1.0/environment/control/rest/redeploycontainersbygroup?session=$HIDORA_API_TOKEN&envName=htk-anonymizing-reverse-proxy&nodeGroup=cp&tag=prod&useExistingVolumes=true" | \
-             tee /dev/stderr | \
-             grep -q 'Node has been successfully updated'
-        env:
-          HIDORA_API_TOKEN: ${{ secrets.HIDORA_API_TOKEN }}
+      - name: Redeploy container
+        uses: thibaultchazal/scaleway-serverless-container-deploy-action@0d290edda0c3359e51442bd8bf730eafef4e290f
+        with:
+          container_id: ${{ vars.SCW_API_CONTAINER_ID }}
+          secret_key: ${{ secrets.SCW_SECRET_KEY }}
+          registry_image_url: "registry.hub.docker.com/httptoolkit/anonymizing-reverse-proxy:prod"
