@@ -16,7 +16,7 @@
         header_up Host {upstream_hostport}
 
         # Anonymize ip addresses when forwarding:
-        header_up X-Forwarded-For "\.(\d{0,3})$" ".0"
+        header_up X-Forwarded-For "\.\d{0,3}(,\s*|$)" ".0$1"
     }
 }
 
