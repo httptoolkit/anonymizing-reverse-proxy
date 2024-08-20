@@ -35,7 +35,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
       - name: Redeploy container
-        uses: thibaultchazal/scaleway-serverless-container-deploy-action@0d290edda0c3359e51442bd8bf730eafef4e290f
+        uses: httptoolkit/scaleway-serverless-container-deploy-action@v1
         with:
           container_id: ${{ vars.SCW_API_CONTAINER_ID }}
           secret_key: ${{ secrets.SCW_SECRET_KEY }}
