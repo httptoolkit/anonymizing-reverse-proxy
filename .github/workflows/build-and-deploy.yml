@@ -15,24 +15,34 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Login to Scaleway Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: rg.nl-ams.scw.cloud/httptoolkit
+          username: nologin
+          password: ${{ secrets.SCW_REGISTRY_KEY }}
+
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          images: httptoolkit/anonymizing-reverse-proxy
+          images: |
+            httptoolkit/anonymizing-reverse-proxy
+            rg.nl-ams.scw.cloud/httptoolkit/anonymizing-reverse-proxy
           tags: |
             type=raw,value=prod,enable={{is_default_branch}}
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha
 
-      - name: Publish to Docker Hub
+      - name: Build & publish API image to registries
         uses: docker/build-push-action@v5
         with:
           context: .
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ github.sha }}
 
       - name: Redeploy container
         uses: httptoolkit/scaleway-serverless-container-deploy-action@v1
