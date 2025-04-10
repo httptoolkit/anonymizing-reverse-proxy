@@ -44,6 +44,11 @@
             header_up X-Forwarded-For "\.\d{0,3}(,\s*|$)" ".0$1"
         }
     }
+
+    respond 400 {
+        body "Unrecognized URL"
+        close
+    }
 }
 
 # For any other unrecognized services, we reject the request outright:
