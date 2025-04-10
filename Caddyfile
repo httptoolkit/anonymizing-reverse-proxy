@@ -25,12 +25,17 @@
     # from: https://errors.httptoolkit.tech/o123/api/456/...
     # to: https://o123.ingest.us.sentry.io/api/456/...
     @has_id_path {
-        path_regexp id_path ^/o(\d+)(.*)$
+        path_regexp id_path ^/(o\d+)/(.*)$
     }
 
     handle @has_id_path {
-        reverse_proxy https://{re.id_path.1}.ingest.us.sentry.io {
-            uri {re.id_path.2}
+        reverse_proxy {
+            to {re.id_path.1}.ingest.us.sentry.io:443
+            rewrite /{re.id_path.2}
+            transport http {
+                # We have to TLS explicitly because you can't use https:// with a placeholder
+                tls
+            }
 
             # Set appropriate headers
             header_up Host {upstream_hostport}
