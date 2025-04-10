@@ -20,6 +20,27 @@
     }
 }
 
+{$ERRORS_DOMAIN:errors.httptoolkit.tech}:{$PORT:8080} {
+    # This redirects Sentry requests from our own domain to their per-project subdomains:
+    # from: https://errors.httptoolkit.tech/o123/api/456/...
+    # to: https://o123.ingest.us.sentry.io/api/456/...
+    @has_id_path {
+        path_regexp id_path ^/o(\d+)(.*)$
+    }
+
+    handle @has_id_path {
+        reverse_proxy https://{re.id_path.1}.ingest.us.sentry.io {
+            uri {re.id_path.2}
+
+            # Set appropriate headers
+            header_up Host {upstream_hostport}
+
+            # Anonymize ip addresses when forwarding:
+            header_up X-Forwarded-For "\.\d{0,3}(,\s*|$)" ".0$1"
+        }
+    }
+}
+
 # For any other unrecognized services, we reject the request outright:
 :80, :443, :{$PORT:8080} {
     log
